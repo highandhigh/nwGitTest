@@ -1,4 +1,5 @@
 ##Reads ASX Data for a particular stock
+##random change by jmoore!!!
 readASX <- function(Ticker,Days){
   library(ggplot2)
   library(dplyr)
