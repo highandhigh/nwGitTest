@@ -1,4 +1,4 @@
-##Reads ASX Data for a particular stock
+##Reads ASX Data for a particular stockv
 ##random change by jmoore!!!
 readASX <- function(Ticker,Days){
   library(ggplot2)
