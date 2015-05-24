@@ -1,5 +1,4 @@
 ##Reads ASX Data for a particular stockv
-##random change by jmoore!!!
 readASX <- function(Ticker,Days){
   library(ggplot2)
   library(dplyr)
@@ -900,4 +899,10 @@ candlestick <- function(Ticker, months = 6){
         g 
     
 }
+
+#rCharts
+
+
+
+
 

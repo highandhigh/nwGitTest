@@ -1,10 +1,10 @@
 ##Gathers data and computes Share Price for a stuck, outputs a plot
 SPvis<- function(Ticker,months=6){
         library(ggplot2)
+        library(quantmod)
         library(ggvis)
         library(dplyr)
         library(grid)
-        library(quantmod)
         library(TTR)
         library(lubridate)
         library(scales)
@@ -27,11 +27,14 @@ SPvis<- function(Ticker,months=6){
         
         ##Share Price Chart
         b <- data %>%
-                ggvis(~Date,~SharePrice)%>%
-                layer_lines(stroke := "darkorange", strokeWidth := 1)%>%
-                layer_lines(x = ~Date,y = ~MA50,stroke := "red",strokeWidth := 1)%>%
-                layer_lines(x = ~Date,y = ~EMA50,stroke := "black",strokeWidth := 1)%>%
-                layer_ribbons(x = ~Date, y = ~SharePrice, fill := "orange",fillOpacity := 0.5, y2 = 0)
+              ggvis(x = ~Date,y = ~SharePrice) %>%
+              layer_lines(stroke := "darkorange", strokeWidth := 1) %>%
+              layer_lines(x = ~Date,y = ~MA50,stroke := "red",strokeWidth := 1,)%>%
+              layer_lines(x = ~Date,y = ~EMA50,stroke := "black",strokeWidth := 1)%>%
+              layer_ribbons(x = ~Date, y = ~SharePrice, fill := "orange",fillOpacity := 0.5, y2 = 0) %>%
+              scale_datetime("x",expand = c(0,0)) %>%
+              add_axis("y",scale = 0:0.6)
+              
               
                 
                 

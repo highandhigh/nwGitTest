@@ -1,0 +1,10 @@
+library(rvest)
+html <- html("http://www.miningfeeds.com/nickel-mining-report-australia")
+htmlnodes <- html_nodes(x = html, css = "td")
+data <- html_text(htmlnodes, trim = TRUE)
+data1 <- as.data.frame(matrix(data = data,ncol = 12,byrow = TRUE))
+columns <- htmlnodes <- html_nodes(x = html, css = "th")
+columns <- html_text(columns, trim = TRUE)
+columns <- as.data.frame(matrix(data = columns,ncol = 12,byrow = TRUE))
+colnames(data1) <- unlist(columns[1,])
+data1 <- data1[,-1]
