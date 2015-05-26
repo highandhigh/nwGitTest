@@ -4,6 +4,7 @@
 ##Gather company names, ticker, and market cap for a metal
 metalsector <- function(metal){
       library(rvest)
+      library(plyr)
       url <- paste(sep = "","http://www.miningfeeds.com/",metal,"-mining-report-australia")
       html <- html(url)
       htmlnodes <- html_nodes(x = html, css = "td")
@@ -21,12 +22,12 @@ metalsector <- function(metal){
       tickers <- companies[,2]
       stats <- ldply(tickers,getKeyStats_xpath)
       companies <- cbind(companies,stats)
-      companies <- companies[,c(1:11,14:36,38,40:48)]
+      companies <- companies[,c(1:11,27,28,29)]
       
       #Convert Numbers to Numerics
-      x=1
-      converts <- c()
-      while
+      #x=1
+      #converts <- c()
+      #while
       
       i=1
       while(i <= nrow(companies)){
@@ -40,14 +41,35 @@ metalsector <- function(metal){
                   i=i+1
                   next
             }
-            if(grepl(pattern = "K",x = companies[i,3])){
+            if(grepl(pattern = "k",x = companies[i,3])){
                   companies[i,3] <- as.numeric(gsub(pattern = "K",x = companies[i,3] ,replacement = "",ignore.case = TRUE))
                   i=i+1
                   next
             }
             
       }
+      i=1
+      while(i <= nrow(companies)){
+            if(grepl(pattern = "B",x = companies[i,4])){
+                  companies[i,4] <- as.numeric(gsub(pattern = "B",x = companies[i,4] ,replacement = "",ignore.case = TRUE))*1000000
+                  i=i+1
+                  next
+            }
+            if(grepl(pattern = "M",x = companies[i,4])){
+                  companies[i,4] <- as.numeric(gsub(pattern = "M",x = companies[i,4] ,replacement = "",ignore.case = TRUE))*1000
+                  i=i+1
+                  next
+            }
+            if(grepl(pattern = "K",x = companies[i,4])){
+                  companies[i,4] <- as.numeric(gsub(pattern = "k",x = companies[i,4] ,replacement = "",ignore.case = TRUE))
+                  i=i+1
+                  next
+            }
+            
+      }
+      rm(XML)
       companies
+      
 }
 
 
@@ -57,8 +79,8 @@ getKeyStats_xpath <- function(symbol) {
 ##stats <- ldply(tickers,getKeyStats_xpath)      
       
       
-      require(XML)
-      require(plyr)
+      library(XML)
+      library(plyr)
             yahoo.URL <- "http://finance.yahoo.com/q/ks?s="
             html_text <- htmlParse(paste(yahoo.URL, symbol, sep = ""), encoding="UTF-8")
             

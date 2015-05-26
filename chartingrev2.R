@@ -523,7 +523,7 @@ dualplot<- function(A,B){
     maxWidth = grid::unit.pmax(gA$widths[2:5], gB$widths[2:5])
     gA$widths[2:5] <- as.list(maxWidth)
     gB$widths[2:5] <- as.list(maxWidth)
-    grid.arrange(gA, gB, ncol=1,heights=c(2, 1))
+    grid.arrange(gA, gB, ncol=1,heights=c(1, 1))
 }
 
 triplot<- function(A,B,C){
@@ -903,6 +903,24 @@ candlestick <- function(Ticker, months = 6){
 #rCharts
 
 
+fiveplot<- function(A,B,C,D,E){
+      library(gridExtra)
+      library(ggplot2)
+      gA <- ggplotGrob(A)
+      gB <- ggplotGrob(B)
+      gC <- ggplotGrob(C)
+      gD <- ggplotGrob(D)
+      gE <- ggplotGrob(E)
+      maxWidth = grid::unit.pmax(gA$widths[2:5], gB$widths[2:5],gC$widths[2:5], gD$widths[2:5],gE$widths[2:5])
+      gA$widths[2:5] <- as.list(maxWidth)
+      gB$widths[2:5] <- as.list(maxWidth)
+      gC$widths[2:5] <- as.list(maxWidth)
+      gD$widths[2:5] <- as.list(maxWidth)
+      gE$widths[2:5] <- as.list(maxWidth)
+      grid.arrange(gA, gB, gC, gD, gE, ncol=1,heights=c(2,1,1,1,1))
+      
+}
 
+#fiveplot(SPsolo("PAN",6),MFIplot("PAN",6),chaikanplot("PAN",6),MACDsolo("PAN",6),tradevolume("PAN",6))
 
 
