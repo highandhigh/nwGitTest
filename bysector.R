@@ -1,6 +1,6 @@
 
 sectorpull <- function(sector){
-      ##Gather company names, ticker, and market cap for a metal
+      ##Gather company names, ticker, and market cap for a metalk
       library(plyr)
       data <- read.csv(file = "http://www.asx.com.au/asx/research/ASXListedCompanies.csv",header = TRUE, skip = 2)
       colnames(data) <- c("Company","Ticker","Industry")
