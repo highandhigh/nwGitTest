@@ -64,7 +64,7 @@ getKeyStats_xpath <- function(symbol) {
       require(xml2)
       require(plyr)
       yahoo.URL <- "http://finance.yahoo.com/q/ks?s="
-      html_text <- read_html(paste(yahoo.URL, symbol, sep = ""), encoding="UTF-8")
+      html_text <- read_html(paste(yahoo.URL, symbol,".AX", sep = ""), encoding="UTF-8")
       
       #search for <td> nodes anywhere that have class 'yfnc_tablehead1'
       nodes <- xml_find_all(html_text, "/*//td[@class='yfnc_tablehead1']")
@@ -101,8 +101,8 @@ analyzesector <- function(sector){
       library(Hmisc)
       data <- sectorpull(sector)
       data <- arrange(data,desc(data[,6]))
-      data[,2] <- gsub(x = data[,2],pattern = ".AX",replacement = "",ignore.case = TRUE)
-      data <- data[1:15,c(-1,-3,-4,-13)]
+      #data[,2] <- gsub(x = data[,2],pattern = ".AX",replacement = "",ignore.case = TRUE)
+      data <- data[1:15,c(-3)]
       data <- melt(data,id.vars = "Ticker")
       data <- data[data$value <75,]
       data <- data[data$value >(-20),]
@@ -114,7 +114,7 @@ analyzesector <- function(sector){
             facet_wrap(facets = ~variable,ncol = 3,scales = "free")+
             theme_economist()+
             theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-            ggtitle(paste(capitalize(metal)," Market Analysis for ",Sys.Date()))
+            ggtitle(paste(capitalize(sector)," Market Analysis for ",Sys.Date()))
       
       c
       
