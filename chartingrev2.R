@@ -557,88 +557,12 @@ MACDplot<- function(Ticker,months=6){
     grid.arrange(gA, gC, gB, gD, ncol=1, heights=c(3,3,1,1))
 }
 
-##Chaikan Oscillator 
-Chaikan <- function(Ticker,months=6){
+chaikanplot <- function(Ticker,months=6){
 #Gathers data and computes Share Price for a stuck, outputs a plot
 ##For info http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:chaikin_oscillator
 ##or http://www.investopedia.com/articles/active-trading/031914/understanding-chaikin-oscillator.asp
 ##or http://www.investopedia.com/articles/technical/03/021903.asp
 ##http://www.investopedia.com/ask/answers/071414/whats-difference-between-chaikin-money-flow-cmf-and-money-flow-index-mfi.asp
-    library(ggplot2)
-    library(dplyr)
-    library(grid)
-    library(quantmod)
-    library(TTR)
-    library(lubridate)
-    library(scales)
-    histdata <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
-    histdata[,7] <- row.names(histdata)
-    histdata$V7 <- as.POSIXlt(histdata$V7,format = "%Y-%m-%d")
-    histdata$V7 <- as.Date(histdata$V7)
-    data <- histdata[,c(7,1:5)]
-    colnames(data) <- c("Date","Open","High","Low","Close","Volume")
-    data$Date <- as.Date(data$Date)
-    ##1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low) 
-    data$MFM <- ((data$Close-data$Low)-(data$High-data$Close))/(data$High-data$Low)
-    data <- na.exclude(data)
-    ##2. Money Flow Volume = Money Flow Multiplier x Volume for the Period
-    data$MFV <- data$MFM *data$Volume
-    ##3. ADL = Previous ADL + Current Period's Money Flow Volume
-    data$ADL <- NA
-    data$ADL[1] <- data$MFV[1]
-    i <- 2
-    while(i <= nrow(data)){
-        data$ADL[i] <- data$ADL[i-1] + data$MFV[i]
-        i <- i+1
-    }
-    ##4. Chaikin Oscillator = (3-day EMA of ADL)  -  (10-day EMA of ADL)    
-    data$EMA3 <- EMA(x = data$ADL,n=3)
-    data$EMA10 <- EMA(x = data$ADL,n = 10)
-    data$Chai <-data$EMA3-data$EMA10
-    data$SMA10 <- SMA(x = data$Chai,10)
-    data <- na.exclude(data)
-    data <- data[data$Date >  Sys.Date() - months(months),]
-    rownames(data) <- NULL
-    ##Plot ADL EMA 3 and 10
-    b <- ggplot(data = data,x = Date) + 
-        geom_line(aes(x = Date,y = EMA3,color="EMA3"),lwd=0.5) +
-        geom_line(aes(x = Date,y = EMA10,color = "EMA10"),lwd=0.5) +
-        geom_ribbon(aes(x =Date, ymax=EMA10, ymin=EMA3),colour = NA, fill="maroon", alpha=.1)+
-        scale_color_manual(values=c("EMA3" = "red","EMA10"="blue"))+
-        theme(legend.title=element_blank(),
-              plot.title = element_text(lineheight=1,face="bold",vjust = 0.25,hjust = 0.0),
-              legend.justification=c(0,0), 
-              legend.position=c(0,0),
-              legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
-              plot.margin=unit(c(0,10,1,3),"mm"))+ 
-        scale_x_date(expand=c(0,0)) + 
-        ##scale_y_continuous(limits = c(0,max(data$EMA3,data$EMA10)*1.3),expand = c(1,1))+
-        labs(title = paste(Ticker," Chaikan Oscillator",sep = ""),x = NULL,y = NULL)
-        ##geom_text(data = subset(data[nrow(data),]),aes(x = Date,y = Close, label = Close),hjust=1, vjust=0,size=4,colour = "darkgreen")
-    ##Plot Chaikan
-    a <- ggplot(data = data) + 
-        geom_line(aes(x = Date,y = Chai,color = "Chai Osc"),lwd=0.5) +
-        geom_line(aes(x = Date,y = SMA10,color = "SMA10"),lwd=0.5) +
-        geom_bar(aes(x=Date,y=Chai),color="blue",position = "identity",stat = "identity",alpha=I(.2),fill=ifelse(data$Chai > 0,"green","red"),linetype=0)+
-        theme(legend.title=element_blank(),
-              axis.text.x=element_blank(),
-              legend.justification=c(0,1), 
-              legend.position=c(0,1),
-              axis.ticks.x=element_blank(),
-              axis.ticks.y=element_blank(),
-              legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
-              plot.margin=unit(c(0,5,0,3),"mm"))+
-        scale_x_date(expand=c(0,0)) +
-        scale_color_manual(values=c("Chai Osc" = "darkred","SMA10" = "black"))+
-        labs(title = NULL,x = NULL,y = NULL)
-    
-    png(filename = paste(Ticker," Chaikan for ",Sys.Date(),".png"),width = 400,height = 210,res = 1200,units = "mm")
-    triplot(b,a,tradevolume(Ticker,months))
-    dev.off()  
-    triplot(b,a,tradevolume(Ticker,months))
-    }
-
-chaikanplot <- function(Ticker,months=6){
     library(ggplot2)
     library(dplyr)
     library(grid)
@@ -695,19 +619,50 @@ chaikanplot <- function(Ticker,months=6){
 a
 }
 
-##Money Flow Index 
-##http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:money_flow_index_mfi
-##http://www.investopedia.com/ask/answers/071414/whats-difference-between-chaikin-money-flow-cmf-and-money-flow-index-mfi.asp
+RSIplot <- function(Ticker,months=6){
+        library(ggplot2)
+        library(dplyr)
+        library(grid)
+        library(quantmod)
+        library(TTR)
+        library(lubridate)
+        histdata <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
+        histdata[,7] <- row.names(histdata)
+        histdata$V7 <- as.POSIXlt(histdata$V7,format = "%Y-%m-%d")
+        histdata$V7 <- as.Date(histdata$V7)
+        rownames(histdata) <- NULL
+        histdata <- histdata[,c(7,4)]
+        colnames(histdata) <- c("Date","SharePrice")
+        histdata$Date <- as.Date(histdata$Date)
+        data <- histdata
+        data$RSI <- RSI(data$SharePrice)
+        data <- data[data$Date >  Sys.Date() - months(months),]
+        ##MACD Chart
+        a <- ggplot(data = data) + 
+                geom_line(aes(x = Date,y = RSI,color = "RSI"),lwd=0.6) +
+                geom_hline(aes(yintercept = 70,color = "Overbought(Sell)"),lwd=0.75)+
+                geom_hline(aes(yintercept = 30,color = "Oversold(Buy)"),lwd=0.75)+
+                theme(legend.title=element_blank(),
+                      axis.text.x=element_blank(),
+                      legend.justification=c(0,1), 
+                      legend.position=c(0,1),
+                      axis.ticks.x=element_blank(),
+                      axis.ticks.y=element_blank(),
+                      legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
+                      plot.margin=unit(c(0,5,0,3),"mm"))+
+                scale_color_manual(values=c("RSI" = "blue","Overbought(Sell)" = "red","Oversold(Buy)"="darkgreen"))+
+                scale_x_date(expand=c(0,0)) +
+                labs(title = NULL,x = NULL,y = NULL)
+        a
+}
 
-
-##Aroon http://www.investopedia.com/articles/trading/06/aroon.asp
-#http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:aroon
 aroonplot <- function(Ticker,months=6){
 #The Aroon indicator is used best by traders and investors interested in whether or not a trend is 
 #still intact. It can help traders avoid inefficient use of capital by allowing them to seek other 
 #opportunities during sideways markets and only hold positions during strong trends. However, it is important to watch carefully and analyze stocks using other studies in conjunction with Aroon to avoid the primary weakness in this system - sharp price movements.
 #Read more: http://www.investopedia.com/articles/trading/06/aroon.asp#ixzz3aWvEUQvv 
-  
+##Aroon http://www.investopedia.com/articles/trading/06/aroon.asp
+#http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:aroon 
     library(quantmod)
     library(ggplot2)
     library(dplyr)
@@ -756,10 +711,69 @@ aroonplot <- function(Ticker,months=6){
 
 ##Disparity Index
 
-
-
-##Bollinger Bands&reg 
-#http://www.investopedia.com/articles/trading/05/022205.asp
+bollingerplot <- function(Ticker, months = 6){
+      ##Bollinger Bands&reg 
+      #http://www.investopedia.com/articles/trading/05/022205.asp
+      #http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:bollinger_bands
+      library(quantmod)
+      library(ggplot2)
+      library(dplyr)
+      library(grid)
+      library(TTR)
+      library(scales)
+      library(lubridate)
+      x <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
+      start <- Sys.Date()- months(months)
+      end <- Sys.Date()
+      # the below is done redundantly for ease of maintenance later on
+      #First, strip OHLC data (need to vectorize)
+      date <- as.Date(rownames(x))
+      open <- as.vector(Op(x))
+      high <- as.vector(Hi(x))
+      low <- as.vector(Lo(x))
+      close <- as.vector(Cl(x))
+      
+      #Then build the data frame
+      xSubset <-data.frame('date'=date,'open'=open,'high'= high,'low'=low,'close'=close)
+      
+      #We want to construct our candlesticks  
+      xSubset$candleLower <- pmin(xSubset$open, xSubset$close)
+      xSubset$candleMiddle <- NA
+      xSubset$candleUpper <- pmax(xSubset$open, xSubset$close)
+      xSubset$fill <- ''
+      xSubset$fill[xSubset$open < xSubset$close] = 'white'
+      xSubset$fill[xSubset$fill ==''] = 'red'
+      
+      #Add Moving Averages
+      xSubset$ma200 <- SMA(xSubset$close, 200)
+      xSubset$ma50 <- SMA(xSubset$close, 50)
+      boll <- BBands(HLC = xSubset[,c(3,4,5)])
+      xSubset <- cbind(xSubset,boll)
+      
+      #Trim Data
+      xSubset <-subset(xSubset, xSubset$date > start & xSubset$date < end)
+      
+      #Graphing Step
+      g <- ggplot(xSubset, aes(x=date, lower=candleLower, middle=candleMiddle, upper=candleUpper, ymin=low, ymax=high))+ 
+            geom_boxplot(stat='identity', aes(group=date, fill=fill),alpha = 0.5)+
+            scale_fill_manual(values = c("red", "green"))+
+            geom_line(aes(x=date, y=mavg),colour = "blue")+ 
+            geom_line(aes(x=date, y=up),colour = "blue")+ 
+            geom_line(aes(x=date, y=dn),colour = "blue")+ 
+            #scale_color_manual(values=c("MFI" = "blue","Overbought(Sell)" = "red","Oversold(Buy)"="darkgreen"))
+            theme(legend.title=element_blank(),
+                  plot.title = element_text(lineheight= 1 ,face="bold",vjust = 0.25,hjust = 0.0),
+                  legend.justification=c(0,0), 
+                  legend.position="none",
+                  legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
+                  plot.margin=unit(c(0,10,1,3),"mm"))+ 
+            scale_x_date(expand=c(0,0)) + 
+            scale_y_continuous(labels = dollar_format(largest_with_cents = 5),
+                               limits = c(min(xSubset$candleLower*0.8),max(xSubset$candleUpper)*1.2),expand = c(0,0))+
+            labs(title = NULL,x = NULL,y = NULL)
+      g 
+      
+}
 
 
 
@@ -785,12 +799,9 @@ stochastic <- function(Ticker,months=6){
 }
 
 
-
-##Fibonacci http://www.investopedia.com/articles/trading/06/fibonacci.asp
-
+MFIplot <- function(Ticker,months=6){
 ##Money Flow Index
 ##http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:money_flow_index_mfi
-MFIplot <- function(Ticker,months=6){
     library(quantmod)
     library(ggplot2)
     library(dplyr)
@@ -922,5 +933,6 @@ fiveplot<- function(A,B,C,D,E){
 }
 
 #fiveplot(SPsolo("PAN",6),MFIplot("PAN",6),chaikanplot("PAN",6),MACDsolo("PAN",6),tradevolume("PAN",6))
+#fiveplot(SPsolo("ZIP",6),MFIplot("ZIP",6),chaikanplot("ZIP",6),MACDsolo("ZIP",6),tradevolume("ZIP",6))
 
 
