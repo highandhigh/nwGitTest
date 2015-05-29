@@ -194,56 +194,6 @@ volumeplot <- function(Ticker){
   
 }
 
-##Moving Average Convergence Divergence - outputs multiple charts
-MACD <- function(Ticker,months=6,ShortVolume=TRUE,ShortRatio=TRUE){
-  library(ggplot2)
-  library(dplyr)
-  library(grid)
-  library(quantmod)
-  library(TTR)
-  library(lubridate)
-  histdata <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
-  histdata[,7] <- row.names(histdata)
-  histdata$V7 <- as.POSIXlt(histdata$V7,format = "%Y-%m-%d")
-  histdata$V7 <- as.Date(histdata$V7)
-  rownames(histdata) <- NULL
-  histdata <- histdata[,c(7,4)]
-  colnames(histdata) <- c("Date","SharePrice")
-  histdata$Date <- as.Date(histdata$Date)
-  data <- histdata
-  data$EMA12 <- EMA(x = data$SharePrice,n = 12)
-  data$EMA26 <- EMA(x = data$SharePrice,n = 26)
-  data <- data[-(1:26),]
-  data$MACD <- data$EMA12 - data$EMA26
-  data$SIGNAL <- EMA(x = data$MACD,n = 9)
-  data <- data[-(1:8),] 
-  data$difference <- data$MACD-data$SIGNAL
-  rownames(data) <- NULL
-  data <- data[data$Date >  Sys.Date() - months(months),]
-  ##MACD Chart
-  a <- ggplot(data = data) + 
-    geom_line(aes(x = Date,y = MACD,color = "MACD"),lwd=0.5) +
-    geom_line(aes(x = Date,y = SIGNAL,color = "Signal Line"),lwd=0.5) +
-    geom_bar(aes(x=Date,y=difference),color="blue",position = "identity",stat = "identity",alpha=I(.2),fill=ifelse(data$difference > 0,"green","red"),linetype=0)+
-    scale_color_manual(values=c("MACD" = "black","Signal Line" = "red","MACD-Signal" = "blue"))+
-    theme(legend.title=element_blank(),plot.title = element_text(lineheight=1, face="bold"))+
-    labs(title = paste(Ticker," MA Convergence Divergence Chart",sep = ""),x = "2015 Date",y = "Ratio")
-  ##Share Price Chart
-  b <- ggplot(data = data) + 
-    geom_line(aes(x = Date,y = SharePrice,color = "Share Price"),lwd=0.5) +
-    scale_color_manual(values=c("Share Price" = "black"))+
-    theme(legend.title=element_blank(),plot.title = element_text(lineheight=1, face="bold"))+ 
-    labs(title = paste(Ticker," Share Price",sep = ""),x = "2015 Date",y = "Share Price")
-    
-  e <- tradevolume(Ticker,months)
-  if(ShortRatio==TRUE) {c <- shortratio(Ticker,months)}
-  if(ShortVolume==TRUE){d <- shortvolume(Ticker,months)}
-  if(ShortRatio==TRUE && ShortVolume==TRUE){multiplot(b,a,c,d,e,cols=1)}
-  if(ShortRatio!=TRUE && ShortVolume==TRUE){multiplot(b,a,d,e,cols=1)}
-  if(ShortRatio==TRUE && ShortVolume!=TRUE){multiplot(b,a,c,e,cols=1)}
-  if(ShortRatio!=TRUE && ShortVolume!=TRUE){multiplot(b,a,e,cols=1)}
-}
-
 ##Gathers data and computes short data for a stock, outputs a plot
 shortratio <- function(Ticker,months){
     library(ggplot2)
@@ -330,7 +280,6 @@ shortvolume <- function(Ticker,months){
     b
 }
 
-##Gathers data and computes short volume for a stock, outputs a plot
 tradevolume <- function(Ticker,months=6){
     library(ggplot2)
     library(dplyr)
@@ -370,7 +319,7 @@ tradevolume <- function(Ticker,months=6){
 
 }
 
-##Gathers data and computes MACD for a stock, outputs a plot
+
 MACDsolo <- function(Ticker,months=6){
     library(ggplot2)
     library(dplyr)
@@ -416,7 +365,6 @@ MACDsolo <- function(Ticker,months=6){
     a
 }
 
-##Gathers data and computes Share Price for a stuck, outputs a plot
 SPsolo <- function(Ticker,months=6){
     library(ggplot2)
     library(dplyr)
@@ -539,24 +487,6 @@ triplot<- function(A,B,C){
     grid.arrange(gA, gB, gC, ncol=1,heights=c(2, 1,1))
 }
 
-MACDplot<- function(Ticker,months=6){
-    library(gridExtra)
-    library(ggplot2)
-    gA <- ggplotGrob(SPsolo(Ticker,months))
-    gB <- ggplotGrob(tradevolume(Ticker,months))
-    gC <- ggplotGrob(MACDsolo(Ticker,months))
-    gD <- ggplotGrob(shortratio(Ticker,months))
-    maxWidth = grid::unit.pmax(gA$widths[2:5], gB$widths[2:5],gC$widths[2:5],gD$widths[2:5])
-    gA$widths[2:5] <- as.list(maxWidth)
-    gB$widths[2:5] <- as.list(maxWidth)
-    gC$widths[2:5] <- as.list(maxWidth)
-    gD$widths[2:5] <- as.list(maxWidth)
-    png(filename = paste(Ticker," MACD for ",Sys.Date(),".png"),width = 400,height = 210,res = 1200,units = "mm")
-    grid.arrange(gA, gC, gB, gD, ncol=1, heights=c(3,3,1,1))
-    dev.off()  
-    grid.arrange(gA, gC, gB, gD, ncol=1, heights=c(3,3,1,1))
-}
-
 chaikanplot <- function(Ticker,months=6){
 #Gathers data and computes Share Price for a stuck, outputs a plot
 ##For info http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:chaikin_oscillator
@@ -642,6 +572,7 @@ RSIplot <- function(Ticker,months=6){
                 geom_line(aes(x = Date,y = RSI,color = "RSI"),lwd=0.6) +
                 geom_hline(aes(yintercept = 70,color = "Overbought(Sell)"),lwd=0.75)+
                 geom_hline(aes(yintercept = 30,color = "Oversold(Buy)"),lwd=0.75)+
+                geom_hline(aes(yintercept = 50),color = "black",lwd=0.75)+
                 theme(legend.title=element_blank(),
                       axis.text.x=element_blank(),
                       legend.justification=c(0,1), 
@@ -708,9 +639,6 @@ aroonplot <- function(Ticker,months=6){
     a
 }
 
-
-##Disparity Index
-
 bollingerplot <- function(Ticker, months = 6){
       ##Bollinger Bands&reg 
       #http://www.investopedia.com/articles/trading/05/022205.asp
@@ -769,31 +697,64 @@ bollingerplot <- function(Ticker, months = 6){
                   plot.margin=unit(c(0,10,1,3),"mm"))+ 
             scale_x_date(expand=c(0,0)) + 
             scale_y_continuous(labels = dollar_format(largest_with_cents = 5),
-                               limits = c(min(xSubset$candleLower*0.8),max(xSubset$candleUpper)*1.2),expand = c(0,0))+
+                               limits = c(min(xSubset$candleLower*0.9),max(xSubset$candleUpper)*1.1),expand = c(0,0))+
             labs(title = NULL,x = NULL,y = NULL)
       g 
       
 }
 
-
+##Disparity Index
 
 ##pure price momentum oscillator or pattern analysis.
-
-
 
 ##Accumulation Distribution Line
 #http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:accumulation_distribution_line
 
-
-
-#Stochastic Oscillator
-#http://www.investopedia.com/terms/s/stochasticoscillator.asp
 stochastic <- function(Ticker,months=6){
-    ##%K = 100[(C - L14)/(H14 - L14)] 
-    ##C = the most recent closing price 
-    ##L14 = the low of the 14 previous trading sessions 
-    ##H14 = the highest price traded during the same 14-day period.
-    ##%D = 3-period moving average of %K 
+        #Stochastic Oscillator
+        #http://www.investopedia.com/terms/s/stochasticoscillator.asp
+        library(quantmod)
+        library(ggplot2)
+        library(dplyr)
+        library(grid)
+        library(TTR)
+        library(scales)
+        library(lubridate)
+        x <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
+        start <- Sys.Date()- months(2*months)
+        end <- Sys.Date()
+        # the below is done redundantly for ease of maintenance later on
+        #First, strip OHLC data (need to vectorize)
+        date <- as.Date(rownames(x))
+        open <- as.vector(Op(x))
+        high <- as.vector(Hi(x))
+        low <- as.vector(Lo(x))
+        close <- as.vector(Cl(x))
+        volume <- as.vector(Vo(x))
+        data <-data.frame('Date'=date,'Open'=open,'High'= high,'Low'=low,'Close'=close,"Volume" = volume)
+        stochasticdata <- stoch(HLC = data[,c("High","Low","Close")])
+        data <- cbind(data,stochasticdata)    
+        data <- na.exclude(data)
+        data <- data[data$Date >  Sys.Date() - months(months),]
+        
+        a <- ggplot(data = data) + 
+                geom_line(aes(x = Date,y = fastK,color = "Fast%K"),lwd=0.6) +
+                geom_line(aes(x = Date,y = slowD,color = "Slow%D"),lwd=0.6) +
+                geom_hline(aes(yintercept = 0.8,color = "Overbought(Sell)"),lwd=0.75)+
+                geom_hline(aes(yintercept = 0.2,color = "Oversold(Buy)"),lwd=0.75)+
+                geom_hline(aes(yintercept = 0.5),color = "black",lwd=0.75)+
+                theme(legend.title=element_blank(),
+                      axis.text.x=element_blank(),
+                      legend.justification=c(0,1), 
+                      legend.position=c(0,1),
+                      axis.ticks.x=element_blank(),
+                      axis.ticks.y=element_blank(),
+                      legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
+                      plot.margin=unit(c(0,5,0,3),"mm"))+
+                scale_x_date(expand=c(0,0)) +
+                scale_color_manual(values=c("Fast%K" = "blue","Slow%D" = "black","Overbought(Sell)" = "red","Oversold(Buy)"="darkgreen"))+
+                labs(title = NULL,x = NULL,y = NULL)
+        a
 
    
 }
@@ -935,4 +896,57 @@ fiveplot<- function(A,B,C,D,E){
 #fiveplot(SPsolo("PAN",6),MFIplot("PAN",6),chaikanplot("PAN",6),MACDsolo("PAN",6),tradevolume("PAN",6))
 #fiveplot(SPsolo("ZIP",6),MFIplot("ZIP",6),chaikanplot("ZIP",6),MACDsolo("ZIP",6),tradevolume("ZIP",6))
 
-
+elderplot <- function(Ticker,months=6){
+        ##Money Flow Index
+        ##http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:money_flow_index_mfi
+        library(quantmod)
+        library(ggplot2)
+        library(dplyr)
+        library(grid)
+        library(TTR)
+        library(scales)
+        library(lubridate)
+        x <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
+        start <- Sys.Date()- months(2*months)
+        end <- Sys.Date()
+        # the below is done redundantly for ease of maintenance later on
+        #First, strip OHLC data (need to vectorize)
+        date <- as.Date(rownames(x))
+        open <- as.vector(Op(x))
+        high <- as.vector(Hi(x))
+        low <- as.vector(Lo(x))
+        close <- as.vector(Cl(x))
+        volume <- as.vector(Vo(x))
+        #Then build the data frame
+        data <-data.frame('Date'=date,'Open'=open,'High'= high,'Low'=low,'Close'=close,"Volume" = volume)
+        data$EMA13 <- EMA(x = data$Close,n = 13)
+        data$EMASlope <- NA
+        i=2
+        while ( i < nrow(data)){
+                data$EMASlope[i] <- (data$EMA13[i] - data$EMA13[i-1])/1
+                i=i+1                
+        }
+        data$Bull <- data$High - data$EMA13
+        data$Bear <- data$Low - data$EMA13
+        data <- na.exclude(data)
+        data <- data[data$Date >  Sys.Date() - months(months),]
+        a <- ggplot(data = data) + 
+                geom_line(aes(x = Date,y = Bear,color = "Bear"),lwd=1) +
+                geom_line(aes(x = Date,y = Bull,color = "Bull"),lwd=1) +
+                geom_bar(aes(x = Date,y = EMASlope),stat="identity",linetype = 0,fill = "blue",alpha = 0.5) +
+                geom_hline(aes(yintercept = 0),colour = "black",lwd=0.75)+
+                theme(legend.title=element_blank(),
+                      axis.text.x=element_blank(),
+                      legend.justification=c(0,1), 
+                      legend.position=c(0,1),
+                      axis.ticks.x=element_blank(),
+                      axis.ticks.y=element_blank(),
+                      legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
+                      plot.margin=unit(c(0,5,0,3),"mm"))+
+                scale_x_date(expand=c(0,0)) +
+                scale_color_manual(values=c("Bear" = "red","Bull" = "darkgreen"))+
+                labs(title = NULL,x = NULL,y = NULL)
+        a
+        
+        
+}
