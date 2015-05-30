@@ -814,7 +814,6 @@ MFIplot <- function(Ticker,months=6){
 
 ##http://en.wikipedia.org/wiki/Beta_(finance)
 
-#Create Candlestick Chart
 candlestick <- function(Ticker, months = 6){
     library(quantmod)
     library(ggplot2)
@@ -872,9 +871,6 @@ candlestick <- function(Ticker, months = 6){
     
 }
 
-#rCharts
-
-
 fiveplot<- function(A,B,C,D,E){
       library(gridExtra)
       library(ggplot2)
@@ -922,7 +918,7 @@ elderplot <- function(Ticker,months=6){
         data$EMA13 <- EMA(x = data$Close,n = 13)
         data$EMASlope <- NA
         i=2
-        while ( i < nrow(data)){
+        while ( i <= nrow(data)){
                 data$EMASlope[i] <- (data$EMA13[i] - data$EMA13[i-1])/1
                 i=i+1                
         }
@@ -945,6 +941,62 @@ elderplot <- function(Ticker,months=6){
                       plot.margin=unit(c(0,5,0,3),"mm"))+
                 scale_x_date(expand=c(0,0)) +
                 scale_color_manual(values=c("Bear" = "red","Bull" = "darkgreen"))+
+                labs(title = NULL,x = NULL,y = NULL)
+        a
+        
+        
+}
+
+ATRplot <- function(Ticker,months=6){
+        ##For viewing volatility
+        library(quantmod)
+        library(ggplot2)
+        library(dplyr)
+        library(grid)
+        library(TTR)
+        library(scales)
+        library(lubridate)
+        x <- getSymbols.yahoo(paste(Ticker,".AX",sep = ""),env = .GlobalEnv,return.class = "data.frame",auto.assign=FALSE)
+        start <- Sys.Date()- months(2*months)
+        end <- Sys.Date()
+        # the below is done redundantly for ease of maintenance later on
+        #First, strip OHLC data (need to vectorize)
+        date <- as.Date(rownames(x))
+        open <- as.vector(Op(x))
+        high <- as.vector(Hi(x))
+        low <- as.vector(Lo(x))
+        close <- as.vector(Cl(x))
+        volume <- as.vector(Vo(x))
+        #Then build the data frame
+        data <-data.frame('Date'=date,'Open'=open,'High'= high,'Low'=low,'Close'=close,"Volume" = volume)
+        data$ATR <- NA
+        i=2
+        while ( i <= nrow(data)){
+                TR1 <- data$High[i] - data$Low[i]
+                TR2 <- data$High[i] - data$Close[i-1]
+                TR3 <- data$Close[i-1] - data$Low[i]
+                TR <- c(TR1,TR2,TR3)
+                TR <- max(TR)
+                data$ATR[i] <- TR
+                i <- i+1
+        }
+        data$EMAatr <- EMA(x = data$ATR,n = 14) 
+        data <- na.exclude(data)
+        data <- data[data$Date >  Sys.Date() - months(months),]
+        a <- ggplot(data = data) + 
+                geom_line(aes(x = Date,y = EMAatr,color = "EMA 14 ATR"),lwd=1) +
+                geom_bar(aes(x = Date,y = ATR,fill = "ATR"),stat="identity",linetype = 0,alpha = 0.5) +
+                theme(legend.title=element_blank(),
+                      axis.text.x=element_blank(),
+                      legend.justification=c(0,1), 
+                      legend.position=c(0,1),
+                      axis.ticks.x=element_blank(),
+                      axis.ticks.y=element_blank(),
+                      legend.background = element_rect(colour = 'lightgrey', fill = 'lightgrey'),
+                      plot.margin=unit(c(0,5,0,3),"mm"))+
+                scale_x_date(expand=c(0,0)) +
+                scale_color_manual(values=c("EMA 14 ATR" = "red"))+
+                scale_fill_manual(values=c("ATR" = "blue"))+
                 labs(title = NULL,x = NULL,y = NULL)
         a
         
